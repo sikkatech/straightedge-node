@@ -1,5 +1,9 @@
 # straightedge-node
 
+<p align="center">
+  <img width="400px" src="https://github.com/heystraightedge/straightedge-node/assets/straightedge_logo_black.jpg" />
+</p>
+
 A Parity Substrate node implementing [Straightedge](https://straighted.ge), an ethical fork of [Edgeware](https://edgewa.re).
 
 ## To get started
@@ -133,4 +137,3 @@ To force your local to create new blocks, even if offline, add the `--force-auth
   - Add it to the `straightedge_runtime`'s list of `Config` types.
   - Add it to the `testnet_genesis` function, initializing all storage fields set to `config()`.
 4. Build and run the chain.
-
