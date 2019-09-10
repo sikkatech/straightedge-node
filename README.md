@@ -5,45 +5,53 @@
 - Proof-of-Stake (PoS) Blockchain
 - with a WASM Runtime.
 
-Developer resources are available at [edgewa.re/dev](https://edgewa.re/dev/) and more detailed documentation at the [Github Wiki](https://github.com/hicommonwealth/edgeware-node/wiki). For more details about the project, visit the Edgeware website, or check the [blog](blog.edgewa.re) or [Twitter](http://twitter.com/heystraightedge) for the latest. Finally, for discussion and governance, you can utilize [Commonwealth.im](https://commonwealth.im).
+Developer resources are available at [Straightedge's Discord](https://discord.gg/ZRj9zRU).
+
+For more details about the project, visit the [Straightedge website](https://straighted.ge) or [Twitter](http://twitter.com/heystraightedge) for the latest.
 
 We are now pegged to: https://github.com/hicommonwealth/substrate.
 
-## To get started
+## Get the software
 
-- Download this entire repository to the file system that you are using to run the validator node.
-  - You can do this by going to [this page](https://github.com/hicommonwealth/edgeware-node) and selecting "Clone or download" followed by "Download ZIP".
-  - If you are installing via a command line interface (e.g. SSH into a remote server), you can dow-load by running `wget https://github.com/hicommonwealth/edgeware-node/archive/master.zip`
-  - Once you have downloaded the zip file, unzip the `edgeware-node-master` folder onto the file system. If you are using a command line interface, you can unzip by running `unzip master.zip`
-  - **_All commands referenced in this document need to be run from within the `edgeware-node-master` folder._**
+Open a command line interface on the server you're installing on, and run the following commands:
 
-- You will also need to install `rust` and `cargo` by installing `rustup` [here](https://rustup.rs/).
-  - **_Note_**: at the end of the install, you will need to log out and log in again, or run the suggested `source` command to configure the current shell.
+- To download the latest version of the software:
+```
+wget https://github.com/heystraightedge/straightedge-node/archive/master.zip
+```
+- To unzip:
+```
+unzip master.zip
+```
 
-## Fresh start
-If your device is clean (such as a fresh cloud VM) you can use this script, otherwise, proceed with the *Initial Setup*.
+## Setup and build
+
+- To setup your environment and build the software, run the following command from within the `straightedge-node-master` folder:
+
 ```
 ./setup.sh
 ```
-To create a keypair, install subkey with `cargo install --force --git https://github.com/paritytech/substrate subkey`. Then run the following:
-```
-subkey generate
-```
-To create an ED25519 keypair, run the following:
-```
-subkey -e generate
-```
-To create derived keypairs, use the mnemonic generated from a method above and run (use `-e` for ED25519):
-```
-subkey inspect "<mnemonic>"//<derive_path>
-```
-For example:
-```
-subkey inspect "west paper guide park design weekend radar chaos space giggle execute canoe"//edgewarerocks
-```
-Then proceed to the *Running* instructions or follow the instructions below for the manual setup.
 
-### Initial Setup
+This can take some time, so perhaps go outside, get some fresh air, and come back later.
+
+You will know it is complete when you see:
+
+```
+   Compiling straightedge v0.8.0 (/home/straightedge-0/straightedge-node-master)
+    Finished release [optimized] target(s) in 12m 04s
+```
+
+### Run
+
+- Run the software by running the following commands from within the `straightedge-node-master` folder:
+
+```
+./target/release/straightedge
+```
+
+
+
+<!-- ### Initial Setup
 
 ```
 curl https://sh.rustup.rs -sSf | sh
@@ -77,10 +85,31 @@ Ensure you have a fresh start if updating from another version:
 ```
 ./scripts/purge-chain.sh
 ```
-<!-- To start up the Straightedge node and connect to the latest testnet, run:
+To start up the Straightedge node and connect to the latest testnet, run:
 ```
 ./target/release/edgeware --chain=edgeware-testnet-v8 --name <INSERT_NAME>
 ```
+
+## Generating a keypair
+
+To create a keypair, install subkey with `cargo install --force --git https://github.com/paritytech/substrate subkey`. Then run the following:
+```
+subkey generate
+```
+To create an ED25519 keypair, run the following:
+```
+subkey -e generate
+```
+To create derived keypairs, use the mnemonic generated from a method above and run (use `-e` for ED25519):
+```
+subkey inspect "<mnemonic>"//<derive_path>
+```
+For example:
+```
+subkey inspect "west paper guide park design weekend radar chaos space giggle execute canoe"//edgewarerocks
+```
+Then proceed to the *Running* instructions or follow the instructions below for the manual setup.
+
 
 ## Implemented Modules
 
@@ -112,7 +141,7 @@ Ensure you have a fresh start if updating from another version:
 * [Timestamp](https://github.com/hicommonwealth/substrate/tree/master/srml/timestamp)
 * [Treasury](https://github.com/hicommonwealth/substrate/tree/master/srml/treasury)
 
-## Developing on Starightedge
+## Developing on Straightedge
 
 ### Running A Local Chain
 
@@ -152,3 +181,4 @@ If the Session keys need to match a fixed seed, they can be set individually key
 curl -H 'Content-Type: application/json' --data '{ "jsonrpc":"2.0", "method":"author_insertKey", "params":["KEY_TYPE", "SEED"],"id":1 }' localhost:9933
 ```
 `KEY_TYPE` - needs to be replaced with the 4-character key type identifier. `SEED` - is the seed of the key.
+-->
