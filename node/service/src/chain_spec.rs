@@ -1,271 +1,357 @@
 // Copyright 2018 Commonwealth Labs, Inc.
-// This file is part of Edgeware.
+// This file is part of Straightedge.
 
-// Edgeware is free software: you can redistribute it and/or modify
+// Straightedge is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// Edgeware is distributed in the hope that it will be useful,
+// Straightedge is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with Edgeware.  If not, see <http://www.gnu.org/licenses/>
+// along with Straightedge.  If not, see <http://www.gnu.org/licenses/>
 
-use primitives::{ed25519, sr25519, Pair};
-use edgeware_primitives::{AccountId, AuraId, Balance};
-use edgeware_runtime::{
-    GrandpaConfig, BalancesConfig, ContractsConfig, ElectionsConfig, DemocracyConfig, CouncilConfig,
-    AuraConfig, IndicesConfig, SessionConfig, StakingConfig, SudoConfig, TechnicalCommitteeConfig,
-    SystemConfig, WASM_BINARY, Perbill, SessionKeys, StakerStatus, DAYS, DOLLARS, MILLICENTS,
+use primitives::{Pair, Public};
+use straightedge_primitives::{AccountId, AuraId, Balance};
+use im_online::ed25519::{AuthorityId as ImOnlineId};
+use straightedge_runtime::{
+	GrandpaConfig, BalancesConfig, ContractsConfig, ElectionsConfig, DemocracyConfig, CouncilConfig,
+	AuraConfig, IndicesConfig, SessionConfig, StakingConfig, SudoConfig, TreasuryRewardConfig,
+	SystemConfig, ImOnlineConfig, WASM_BINARY, Perbill, SessionKeys, StakerStatus, AuthorityDiscoveryConfig,
 };
-use edgeware_runtime::{IdentityConfig, GovernanceConfig};
-pub use edgeware_runtime::GenesisConfig;
+use straightedge_runtime::constants::{time::DAYS, currency::DOLLARS, currency::MILLICENTS};
+use straightedge_runtime::{IdentityConfig, SignalingConfig};
+pub use straightedge_runtime::GenesisConfig;
 use substrate_service;
 use substrate_telemetry::TelemetryEndpoints;
 use grandpa::AuthorityId as GrandpaId;
 use crate::fixtures::*;
+use sr_primitives::{
+	traits::{One},
+};
+use core::convert::TryInto;
+use rand::{thread_rng};
+
 
 const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
-const DEFAULT_PROTOCOL_ID: &str = "edg";
+const DEFAULT_PROTOCOL_ID: &str = "str";
 
 /// Specialised `ChainSpec`.
 pub type ChainSpec = substrate_service::ChainSpec<GenesisConfig>;
 
-pub fn edgeware_config() -> ChainSpec {
-    match ChainSpec::from_json_file(std::path::PathBuf::from("testnets/v0.4.0/edgeware.json")) {
-        Ok(spec) => spec,
-        Err(e) => panic!(e),
-    }
+pub fn straightedge_testnet_v8_config() -> ChainSpec {
+	match ChainSpec::from_json_file(std::path::PathBuf::from("testnets/v0.8.0/straightedge.json")) {
+		Ok(spec) => spec,
+		Err(e) => panic!(e),
+	}
 }
 
-pub fn edgeware_testnet_config_gensis() -> GenesisConfig {
-    let initial_authorities: Vec<(AccountId, AccountId, AuraId, GrandpaId)> = get_vals();
-    let root_key = get_root_key();
-    // Add controller accounts to endowed accounts
-    let endowed_accounts = initial_authorities.clone()
-        .into_iter()
-        .map(|elt| elt.1)
-        .chain(get_more_endowed())
-        .collect();
-    let identity_verifiers = get_identity_verifiers();
+pub fn straightedge_testnet_config_gensis() -> GenesisConfig {
+	let commonwealth_authorities: Vec<(AccountId, AccountId, AuraId, Balance, GrandpaId, ImOnlineId)> = get_genesis_validators();
+	let allocation = get_allocation().unwrap();
+	let lockdrop_balances = allocation.0;
+	let lockdrop_vesting = allocation.1;
+	let lockdrop_validators = allocation.2;
+	// let root_key = get_root_key();
+	// Add controller accounts to endowed accounts
+	let endowed_accounts = get_more_endowed();
+	let identity_verifiers = get_identity_verifiers();
+	const ENDOWMENT: Balance = 10 * DOLLARS;
+	// randomize the session keys
+	let mut rng = thread_rng();
 
-    testnet_genesis(
-        initial_authorities, // authorities
-        root_key,
-        Some(endowed_accounts),
-        Some(identity_verifiers),
-    )
+	let mut session_keys = commonwealth_authorities.iter()
+		.map(|x| (x.0.clone(), session_keys(x.2.clone(), x.4.clone(), x.5.clone())))
+		// .chain(lockdrop_validators.iter().map(|x| (x.0.clone(), session_keys(x.2.clone(), x.4.clone(), x.5.clone()))))
+		.collect::<Vec<_>>();
+	// session_keys.shuffle(&mut rng);
+
+
+
+	GenesisConfig {
+		system: Some(SystemConfig {
+			code: WASM_BINARY.to_vec(),
+			changes_trie_config: Default::default(),
+		}),
+		balances: Some(BalancesConfig {
+			balances: endowed_accounts.iter().cloned()
+				.map(|k| (k, ENDOWMENT))
+				// give authorities their balances
+				.chain(commonwealth_authorities.iter().map(|x| (x.0.clone(), x.3.clone())))
+				// give controllers an endowment
+				.chain(commonwealth_authorities.iter().map(|x| (x.1.clone(), ENDOWMENT)))
+				// give lockdropers their balances
+				.chain(lockdrop_balances.iter().map(|x| (x.0.clone(), x.1.clone())))
+				.collect(),
+			vesting: lockdrop_vesting,
+		}),
+		indices: Some(IndicesConfig {
+			ids: endowed_accounts.iter().cloned()
+				.chain(commonwealth_authorities.iter().map(|x| x.0.clone()))
+				.chain(commonwealth_authorities.iter().map(|x| x.1.clone()))
+				.chain(lockdrop_balances.iter().map(|x| x.0.clone()))
+				.collect::<Vec<_>>(),
+		}),
+		session: Some(SessionConfig {
+			keys: session_keys,
+		}),
+		staking: Some(StakingConfig {
+			current_era: 0,
+			validator_count: 25,
+			minimum_validator_count: 0,
+			stakers: commonwealth_authorities.iter().map(|x| (x.0.clone(), x.1.clone(), x.3.clone(), StakerStatus::Validator))
+				// .chain(lockdrop_validators.iter().map(|x| (x.0.clone(), x.1.clone(), x.3.clone(), StakerStatus::Validator)))
+				.collect(),
+			invulnerables: commonwealth_authorities.iter().map(|x| x.0.clone())
+				// .chain(lockdrop_validators.iter().map(|x| x.0.clone()))
+				.collect(),
+			slash_reward_fraction: Perbill::from_percent(10),
+			.. Default::default()
+		}),
+		democracy: Some(DemocracyConfig::default()),
+		collective_Instance1: Some(CouncilConfig {
+			members: commonwealth_authorities.iter().map(|x| x.1.clone())
+				.chain(endowed_accounts.iter().map(|x| x.clone()))
+				.collect(),
+			phantom: Default::default(),
+		}),
+		elections: Some(ElectionsConfig {
+			members: commonwealth_authorities.iter().map(|x| (x.1.clone(), 1000000))
+				.chain(endowed_accounts.iter().map(|x| (x.clone(), 1000000)))
+				.collect(),
+			desired_seats: 13,
+			presentation_duration: (2 * DAYS).try_into().unwrap(),
+			term_duration: (3 * DAYS).try_into().unwrap(),
+		}),
+		contracts: Some(ContractsConfig {
+			current_schedule: Default::default(),
+			gas_price: 1 * MILLICENTS,
+		}),
+		sudo: Some(SudoConfig {
+			key: root_key,
+		}),
+		im_online: Some(ImOnlineConfig {
+			keys: vec![],
+		}),
+		aura: Some(AuraConfig {
+			authorities: vec![],
+		}),
+		grandpa: Some(GrandpaConfig {
+			authorities: vec![],
+		}),
+		authority_discovery: Some(AuthorityDiscoveryConfig{
+			keys: vec![],
+		}),
+		identity: Some(IdentityConfig {
+			verifiers: identity_verifiers,
+			expiration_length: (1 * DAYS).try_into().unwrap(), // 1 days
+			registration_bond: 1 * DOLLARS,
+		}),
+		signaling: Some(SignalingConfig {
+			voting_length: (3 * DAYS).try_into().unwrap(), // 7 days
+			proposal_creation_bond: 100 * DOLLARS,
+		}),
+		treasury_reward: Some(TreasuryRewardConfig {
+			minting_interval: One::one(),
+		}),
+	}
 }
 
-/// Edgeware testnet generator
-pub fn edgeware_testnet_config() -> Result<ChainSpec, String> {
-    let boot_nodes = vec![
-        "/ip4/157.230.218.41/tcp/30333/p2p/QmNYiKrVuztYuL42gs5kHLTqvKsmEnE3GvJQ8ewcvwtSVF".to_string(),
-        "/ip4/18.223.143.102/tcp/30333/p2p/QmdHoon1jbjeJfTdifknGefGrJHUNYgDDpnJBLLW1Pdt13".to_string(),
-        "/ip4/206.189.33.216/tcp/30333/p2p/QmNc7rakvWY1QL6LL9ssTfKTWUhHUfzMvygYdyMLpLQCR7".to_string(),
-        "/ip4/157.230.125.18/tcp/30333/p2p/QmTqM3sPbeaE7R2WaveJNg1Ma86dSFPTBHXxYSNjwcii1x".to_string(),
-    ];
+/// Straightedge testnet generator
+pub fn straightedge_testnet_config() -> Result<ChainSpec, String> {
+	let boot_nodes = vec![
+		"/ip4/159.65.223.215/tcp/30333/p2p/QmTVhTDnxBBjAGmgGXmha4zJ1E8CUPoeC4Rmi3LWyoLVVB".to_string(), // Sunny
+		"/ip4/134.209.244.243/tcp/30333/p2p/QmeHscJv15DU7UkSKoZuJUQoP8kZwkUrZVxq7hYjvvF753".to_string(), // Chris
+		"/ip4/35.157.118.166/tcp/30333/p2p/QmYeDXy7ExnabtDrt19xfBTBanZcbvF4PUWb8Sr6xVWtUM".to_string(), // Julien
+	];
 
-    Ok(ChainSpec::from_genesis(
-        "Edgeware Testnet",
-        "edgeware_testnet",
-        edgeware_testnet_config_gensis,
-        boot_nodes,
-        Some(TelemetryEndpoints::new(vec![(STAGING_TELEMETRY_URL.to_string(), 0)])),
-        Some(DEFAULT_PROTOCOL_ID),
-        None,
-        None
-    ))
+	Ok(ChainSpec::from_genesis(
+		"Straightedge Testnet",
+		"straightedge_testnet",
+		straightedge_testnet_config_gensis,
+		boot_nodes,
+		Some(TelemetryEndpoints::new(vec![(STAGING_TELEMETRY_URL.to_string(), 0)])),
+		Some(DEFAULT_PROTOCOL_ID),
+		None,
+		None
+	))
 }
 
-fn session_keys(key: ed25519::Public) -> SessionKeys {
-    SessionKeys { ed25519: key }
+fn session_keys(aura: AuraId, grandpa: GrandpaId, im_online: ImOnlineId) -> SessionKeys {
+	SessionKeys { aura, grandpa, im_online }
 }
 
-/// Helper function to generate AccountId from seed
-pub fn get_account_id_from_seed(seed: &str) -> AccountId {
-    sr25519::Pair::from_string(&format!("//{}", seed), None)
-        .expect("static values are valid; qed")
-        .public()
+/// Helper function to generate a crypto pair from seed
+pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
+	TPublic::Pair::from_string(&format!("//{}", seed), None)
+		.expect("static values are valid; qed")
+		.public()
 }
 
-/// Helper function to generate AuraId from seed
-pub fn get_aura_id_from_seed(seed: &str) -> AuraId {
-    ed25519::Pair::from_string(&format!("//{}", seed), None)
-        .expect("static values are valid; qed")
-        .public()
-}
-
-/// Helper function to generate GrandpaId from seed
-pub fn get_grandpa_id_from_seed(seed: &str) -> GrandpaId {
-    ed25519::Pair::from_string(&format!("//{}", seed), None)
-        .expect("static values are valid; qed")
-        .public()
-}
 
 /// Helper function to generate stash, controller and session key from seed
-pub fn get_authority_keys_from_seed(seed: &str) -> (AccountId, AccountId, AuraId, GrandpaId) {
-    (
-        get_account_id_from_seed(&format!("{}//stash", seed)),
-        get_account_id_from_seed(seed),
-        get_aura_id_from_seed(seed),
-        get_grandpa_id_from_seed(seed)
-    )
+pub fn get_authority_keys_from_seed(seed: &str) -> (AccountId, AccountId, AuraId, GrandpaId, ImOnlineId) {
+	(
+		get_from_seed::<AccountId>(&format!("{}//stash", seed)),
+		get_from_seed::<AccountId>(seed),
+		get_from_seed::<AuraId>(seed),
+		get_from_seed::<GrandpaId>(seed),
+		get_from_seed::<ImOnlineId>(seed),
+	)
 }
 
 /// Helper function to create GenesisConfig for testing
-pub fn testnet_genesis(
-    initial_authorities: Vec<(AccountId, AccountId, AuraId, GrandpaId)>,
-    root_key: AccountId,
-    endowed_accounts: Option<Vec<AccountId>>,
-    initial_verifiers: Option<Vec<AccountId>>,
+pub fn development_genesis(
+	initial_authorities: Vec<(AccountId, AccountId, AuraId, GrandpaId, ImOnlineId)>,
+	root_key: AccountId,
+	endowed_accounts: Option<Vec<AccountId>>,
+	initial_verifiers: Option<Vec<AccountId>>,
 ) -> GenesisConfig {
-    let initial_verifiers: Vec<AccountId> = initial_verifiers.unwrap_or_else(|| {
-        vec![
-            get_account_id_from_seed("Alice"),
-            get_account_id_from_seed("Bob"),
-        ]
-    });
+	let initial_verifiers: Vec<AccountId> = initial_verifiers.unwrap_or_else(|| {
+		vec![
+			get_authority_keys_from_seed("Alice").1,
+		]
+	});
 
-    let endowed_accounts: Vec<AccountId> = endowed_accounts.unwrap_or_else(|| {
-        vec![
-            get_account_id_from_seed("Alice"),
-            get_account_id_from_seed("Bob"),
-            get_account_id_from_seed("Charlie"),
-            get_account_id_from_seed("Dave"),
-            get_account_id_from_seed("Eve"),
-            get_account_id_from_seed("Ferdie"),
-            get_account_id_from_seed("Alice//stash"),
-            get_account_id_from_seed("Bob//stash"),
-            get_account_id_from_seed("Charlie//stash"),
-            get_account_id_from_seed("Dave//stash"),
-            get_account_id_from_seed("Eve//stash"),
-            get_account_id_from_seed("Ferdie//stash"),
-        ]
-    });
+	let endowed_accounts: Vec<AccountId> = endowed_accounts.unwrap_or_else(|| {
+		vec![
+			get_authority_keys_from_seed("Alice").1,
+			get_authority_keys_from_seed("Bob").1,
+			get_authority_keys_from_seed("Charlie").1,
+			get_authority_keys_from_seed("Dave").1,
+			get_authority_keys_from_seed("Eve").1,
+			get_authority_keys_from_seed("Ferdie").1,
+		]
+	});
 
-    const ENDOWMENT: Balance = 10_000_000 * DOLLARS;
-    const STASH: Balance = 100 * DOLLARS;
+	const ENDOWMENT: Balance = 10_000_000 * DOLLARS;
+	const STASH: Balance = 100 * DOLLARS;
+	let desired_seats: u32 = (endowed_accounts.len() / 2 - initial_authorities.len()) as u32;
 
-    GenesisConfig {
-        system: Some(SystemConfig {
-            code: WASM_BINARY.to_vec(),
-            changes_trie_config: Default::default(),
-        }),
-        balances: Some(BalancesConfig {
-            balances: endowed_accounts.iter().cloned()
-                .map(|k| (k, ENDOWMENT))
-                .chain(initial_authorities.iter().map(|x| (x.0.clone(), STASH)))
-                .collect(),
-            vesting: vec![],
-        }),
-        indices: Some(IndicesConfig {
-            ids: endowed_accounts.iter().cloned()
-                .chain(initial_authorities.iter().map(|x| x.0.clone()))
-                .collect::<Vec<_>>(),
-        }),
-        session: Some(SessionConfig {
-            keys: initial_authorities.iter().map(|x| (x.0.clone(), session_keys(x.2.clone()))).collect::<Vec<_>>(),
-        }),
-        staking: Some(StakingConfig {
-            current_era: 0,
-            offline_slash: Perbill::from_parts(1_000_000),
-            session_reward: Perbill::from_parts(2_065),
-            current_session_reward: 0,
-            validator_count: 7,
-            offline_slash_grace: 4,
-            minimum_validator_count: 4,
-            stakers: initial_authorities.iter().map(|x| (x.0.clone(), x.1.clone(), STASH, StakerStatus::Validator)).collect(),
-            invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
-        }),
-        democracy: Some(DemocracyConfig::default()),
-        collective_Instance1: Some(CouncilConfig {
-            members: vec![],
-            phantom: Default::default(),
-        }),
-        collective_Instance2: Some(TechnicalCommitteeConfig {
-            members: vec![],
-            phantom: Default::default(),
-        }),
-        elections: Some(ElectionsConfig {
-            members: vec![],
-            presentation_duration: 1 * DAYS,
-            term_duration: 28 * DAYS,
-            desired_seats: 0,
-        }),
-        contracts: Some(ContractsConfig {
-            current_schedule: Default::default(),
-            gas_price: 1 * MILLICENTS,
-        }),
-        sudo: Some(SudoConfig {
-            key: root_key,
-        }),
-        aura: Some(AuraConfig {
-            authorities: initial_authorities.iter().map(|x| x.2.clone()).collect(),
-        }),
-        grandpa: Some(GrandpaConfig {
-            authorities: initial_authorities.iter().map(|x| (x.3.clone(), 1)).collect(),
-        }),
-        identity: Some(IdentityConfig {
-            verifiers: initial_verifiers,
-            expiration_length: 7 * DAYS, // 7 days
-            registration_bond: 100 * MILLICENTS,
-        }),
-        governance: Some(GovernanceConfig {
-            voting_length: 7 * DAYS, // 7 days
-            proposal_creation_bond: 1 * MILLICENTS,
-        }),
-    }
+	GenesisConfig {
+		system: Some(SystemConfig {
+			code: WASM_BINARY.to_vec(),
+			changes_trie_config: Default::default(),
+		}),
+		balances: Some(BalancesConfig {
+			balances: endowed_accounts.iter().cloned()
+				.map(|k| (k, ENDOWMENT))
+				.chain(initial_authorities.iter().map(|x| (x.0.clone(), STASH)))
+				.collect(),
+			vesting: vec![],
+		}),
+		indices: Some(IndicesConfig {
+			ids: endowed_accounts.iter().cloned()
+				.chain(initial_authorities.iter().map(|x| x.0.clone()))
+				.collect::<Vec<_>>(),
+		}),
+		session: Some(SessionConfig {
+			keys: initial_authorities.iter().map(|x|
+				(x.0.clone(), session_keys(x.2.clone(), x.3.clone(), x.4.clone()))
+			).collect::<Vec<_>>(),
+		}),
+		staking: Some(StakingConfig {
+			current_era: 0,
+			validator_count: 7,
+			minimum_validator_count: 4,
+			stakers: initial_authorities.iter().map(|x| (x.0.clone(), x.1.clone(), STASH, StakerStatus::Validator)).collect(),
+			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
+			slash_reward_fraction: Perbill::from_percent(10),
+			.. Default::default()
+		}),
+		democracy: Some(DemocracyConfig::default()),
+		collective_Instance1: Some(CouncilConfig {
+			members: initial_authorities.iter().map(|x| x.1.clone()).collect(),
+			phantom: Default::default(),
+		}),
+		elections: Some(ElectionsConfig {
+			members: initial_authorities.iter().map(|x| (x.1.clone(), 1000000)).collect(),
+			desired_seats: desired_seats,
+			presentation_duration: (1 * DAYS).try_into().unwrap(),
+			term_duration: (28 * DAYS).try_into().unwrap(),
+		}),
+		contracts: Some(ContractsConfig {
+			current_schedule: Default::default(),
+			gas_price: 1 * MILLICENTS,
+		}),
+		sudo: Some(SudoConfig {
+			key: root_key,
+		}),
+		im_online: Some(ImOnlineConfig {
+			keys: vec![],
+		}),
+		aura: Some(AuraConfig {
+			authorities: vec![],
+		}),
+		grandpa: Some(GrandpaConfig {
+			authorities: vec![],
+		}),
+		authority_discovery: Some(AuthorityDiscoveryConfig{
+			keys: vec![],
+		}),
+		identity: Some(IdentityConfig {
+			verifiers: initial_verifiers,
+			expiration_length: (1 * DAYS).try_into().unwrap(), // 1 days
+			registration_bond: 1 * DOLLARS,
+		}),
+		signaling: Some(SignalingConfig {
+			voting_length: (3 * DAYS).try_into().unwrap(), // 7 days
+			proposal_creation_bond: 100 * DOLLARS,
+		}),
+		treasury_reward: Some(TreasuryRewardConfig {
+			minting_interval: One::one(),
+		}),
+	}
 }
 
 fn development_config_genesis() -> GenesisConfig {
-    testnet_genesis(
-        vec![
-            get_authority_keys_from_seed("Alice"),
-        ],
-        get_account_id_from_seed("Alice"),
-        None,
-        None,
-    )
+	development_genesis(
+		vec![
+			get_authority_keys_from_seed("Alice"),
+		],
+		get_authority_keys_from_seed("Alice").0,
+		None,
+		None,
+	)
 }
 
 /// Development config (single validator Alice)
 pub fn development_config() -> ChainSpec {
-    ChainSpec::from_genesis(
-        "Development",
-        "dev",
-        development_config_genesis,
-        vec![],
-        None,
-        Some(DEFAULT_PROTOCOL_ID),
-        None,
-        None)
+	ChainSpec::from_genesis(
+		"Development",
+		"dev",
+		development_config_genesis,
+		vec![],
+		None,
+		Some(DEFAULT_PROTOCOL_ID),
+		None,
+		None)
 }
 
-fn local_testnet_genesis() -> GenesisConfig {
-    testnet_genesis(
-        vec![
-            get_authority_keys_from_seed("Alice"),
-            get_authority_keys_from_seed("Bob"),
-        ],
-        get_account_id_from_seed("Alice"),
-        None,
-        None,
-    )
+fn local_development_genesis() -> GenesisConfig {
+	development_genesis(
+		vec![
+			get_authority_keys_from_seed("Alice"),
+			get_authority_keys_from_seed("Bob"),
+		],
+		get_authority_keys_from_seed("Alice").0,
+		None,
+		None,
+	)
 }
 
 /// Local testnet config (multivalidator Alice + Bob)
 pub fn local_testnet_config() -> ChainSpec {
-    ChainSpec::from_genesis(
-        "Local Testnet",
-        "local_testnet",
-        local_testnet_genesis,
-        vec![],
-        None,
-        Some(DEFAULT_PROTOCOL_ID),
-        None,
-        None)
+	ChainSpec::from_genesis(
+		"Local Testnet",
+		"local_testnet",
+		local_development_genesis,
+		vec![],
+		None,
+		Some(DEFAULT_PROTOCOL_ID),
+		None,
+		None)
 }

@@ -1,0 +1,53 @@
+// Copyright 2018-2019 Commonwealth Labs, Inc.
+// This file is part of Straightedge.
+
+// Straightedge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Straightedge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Straightedge.  If not, see <http://www.gnu.org/licenses/>
+
+//! A set of constant values used in substrate runtime.
+
+/// Money matters.
+pub mod currency {
+	use straightedge_primitives::Balance;
+
+	pub const MILLICENTS: Balance = 10_000_000_000_000;
+	pub const CENTS: Balance = 1_000 * MILLICENTS;    // assume this is worth about a cent.
+	pub const DOLLARS: Balance = 100 * CENTS;
+}
+
+/// Time.
+pub mod time {
+	use straightedge_primitives::{Moment, BlockNumber};
+	pub const MILLISECS_PER_BLOCK: Moment = 6000;
+	pub const SLOT_DURATION: Moment = MILLISECS_PER_BLOCK;
+	// These times are defined in block numbers
+	pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
+	pub const HOURS: BlockNumber = MINUTES * 60;
+	pub const DAYS: BlockNumber = HOURS * 24;
+}
+
+// CRITICAL NOTE: The system module maintains two constants: a _maximum_ block weight and a
+// _ratio_ of it yielding the portion which is accessible to normal transactions (reserving the rest
+// for operational ones). 0`TARGET_BLOCK_FULLNESS` is entirely independent and the system module is
+// not aware of if, nor should it care about it. This constant simply denotes on which ratio of the
+// _maximum_ block weight we tweak the fees. It does NOT care about the type of the dispatch.
+//
+// For the system to be configured in a sane way, `TARGET_BLOCK_FULLNESS` should always be less than
+// the ratio that `system` module uses to find normal transaction quota.
+/// Fee-related.
+pub mod fee {
+	pub use runtime_primitives::Perbill;
+
+	/// The block saturation level. Fees will be updates based on this value.
+	pub const TARGET_BLOCK_FULLNESS: Perbill = Perbill::from_percent(25);
+}

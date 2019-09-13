@@ -1,18 +1,18 @@
 // Copyright 2018 Commonwealth Labs, Inc.
-// This file is part of Edgeware.
+// This file is part of Straightedge.
 
-// Edgeware is free software: you can redistribute it and/or modify
+// Straightedge is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// Edgeware is distributed in the hope that it will be useful,
+// Straightedge is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with Edgeware.  If not, see <http://www.gnu.org/licenses/>.
+// along with Straightedge.  If not, see <http://www.gnu.org/licenses/>.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -56,6 +56,7 @@ mod tests {
 	// The testing primitives are very useful for avoiding having to work with
 	// public keys. `u64` is used as the `AccountId` and no `Signature`s are requried.
 	use runtime_primitives::{
+		Perbill,
 		testing::{Header},
 		traits::{BlakeTwo256, OnFinalize, IdentityLookup},
 	};
@@ -70,13 +71,19 @@ mod tests {
 		}
 	}
 
-	// For testing the module, we construct most of a mock runtime. This means
-	// first constructing a configuration type (`Test`) which `impl`s each of the
-	// configuration traits of modules we want to use.
-	#[derive(Clone, Eq, PartialEq)]
+	#[derive(Clone, PartialEq, Eq, Debug)]
 	pub struct Test;
+
+	parameter_types! {
+		pub const BlockHashCount: u64 = 250;
+		pub const MaximumBlockWeight: u32 = 1024;
+		pub const MaximumBlockLength: u32 = 2 * 1024;
+		pub const AvailableBlockRatio: Perbill = Perbill::one();
+	}
+
 	impl system::Trait for Test {
 		type Origin = Origin;
+		type Call = ();
 		type Index = u64;
 		type BlockNumber = u64;
 		type Hash = H256;
@@ -85,16 +92,35 @@ mod tests {
 		type Lookup = IdentityLookup<Self::AccountId>;
 		type Header = Header;
 		type Event = Event;
+		type WeightMultiplierUpdate = ();
+		type BlockHashCount = BlockHashCount;
+		type MaximumBlockWeight = MaximumBlockWeight;
+		type MaximumBlockLength = MaximumBlockLength;
+		type AvailableBlockRatio = AvailableBlockRatio;
+		type Version = ();
 	}
 
+	parameter_types! {
+		pub const ExistentialDeposit: u64 = 0;
+		pub const TransferFee: u64 = 0;
+		pub const CreationFee: u64 = 0;
+		pub const TransactionBaseFee: u64 = 0;
+		pub const TransactionByteFee: u64 = 0;
+	}
 	impl balances::Trait for Test {
 		type Balance = u64;
-		type OnFreeBalanceZero = ();
 		type OnNewAccount = ();
+		type OnFreeBalanceZero = ();
 		type Event = Event;
 		type TransactionPayment = ();
 		type TransferPayment = ();
 		type DustRemoval = ();
+		type ExistentialDeposit = ExistentialDeposit;
+		type TransferFee = TransferFee;
+		type CreationFee = CreationFee;
+		type TransactionBaseFee = TransactionBaseFee;
+		type TransactionByteFee = TransactionByteFee;
+		type WeightToFee = ();
 	}
 
 	impl Trait for Test {
@@ -110,16 +136,16 @@ mod tests {
 	// This function basically just builds a genesis storage key/value store according to
 	// our desired mockup.
 	fn new_test_ext() -> sr_io::TestExternalities<Blake2Hasher> {
-		let mut t = system::GenesisConfig::default().build_storage::<Test>().unwrap().0;
+		let mut t = system::GenesisConfig::default().build_storage::<Test>().unwrap();
 		// We use default for brevity, but you can configure as desired if needed.
-		t.extend(
+		t.0.extend(
 			identity::GenesisConfig::<Test> {
 				expiration_length: 10000,
 				verifiers: vec![1_u64],
 				registration_bond: BOND,
 			}.build_storage().unwrap().0,
 		);
-		t.extend(
+		t.0.extend(
 			balances::GenesisConfig::<Test> {
 				balances: vec![
 					(1, 100),
@@ -127,11 +153,6 @@ mod tests {
 					(3, 100),
 					(4, 100),
 				],
-				transaction_base_fee: 0,
-				transaction_byte_fee: 0,
-				existential_deposit: 0,
-				transfer_fee: 0,
-				creation_fee: 0,
 				vesting: vec![],
 			}.build_storage().unwrap().0,
 		);
@@ -888,6 +909,25 @@ mod tests {
 				Identity::identity_of(identity_hash),
 				None,
 			);
+		});
+	}
+
+	#[test]
+	fn register_should_expire_and_work_again() {
+		with_externalities(&mut new_test_ext(), || {
+			System::set_block_number(1);
+			let identity_type: &[u8] = b"github";
+			let identity: &[u8] = b"drewstone";
+			let identity_hash = build_identity_hash(identity_type, identity);
+
+			let public = 1_u64;
+
+			assert_ok!(register_identity(public, identity_type, identity));
+			System::set_block_number(10002);
+			<Identity as OnFinalize<u64>>::on_finalize(10002);
+			System::set_block_number(10003);
+			assert_eq!(Identity::identity_of(identity_hash), None);
+			assert_ok!(register_identity(public, identity_type, identity));
 		});
 	}
 }

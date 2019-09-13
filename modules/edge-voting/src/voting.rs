@@ -1,18 +1,18 @@
 // Copyright 2018 Commonwealth Labs, Inc.
-// This file is part of Edgeware.
+// This file is part of Straightedge.
 
-// Edgeware is free software: you can redistribute it and/or modify
+// Straightedge is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// Edgeware is distributed in the hope that it will be useful,
+// Straightedge is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with Edgeware.  If not, see <http://www.gnu.org/licenses/>.
+// along with Straightedge.  If not, see <http://www.gnu.org/licenses/>.
 
 #[cfg(feature = "std")]
 extern crate serde;
@@ -165,7 +165,7 @@ decl_module! {
 				// Ensure secret is passed in
 				ensure!(secret.is_some(), "Secret is invalid");
 				// Ensure the current sender has already committed previously
-				ensure!(record.commitments.iter().any(|c| &c.0 == &_sender), "Sender already committed");
+				ensure!(record.commitments.iter().any(|c| &c.0 == &_sender), "Sender not yet committed");
 				let commit: (T::AccountId, VoteOutcome) = record.commitments
 					.iter()
 					.find(|c| &c.0 == &_sender)
@@ -188,14 +188,6 @@ decl_module! {
 			<VoteRecords<T>>::insert(id, record);
 			Self::deposit_event(RawEvent::VoteRevealed(id, _sender, vote));
 			Ok(())
-		}
-
-		/// A function to advance the vote stage.
-		pub fn advance_stage_as_initiator(origin, vote_id: u64) -> Result {
-			let _sender = ensure_signed(origin)?;
-			let record = <VoteRecords<T>>::get(vote_id).ok_or("Vote record does not exist")?;
-			ensure!(record.data.initiator == _sender, "Invalid advance attempt by non-owner");
-			return Self::advance_stage(vote_id);
 		}
 	}
 }
@@ -277,6 +269,10 @@ impl<T: Trait> Module<T> {
 		}
 
 		true
+	}
+
+	pub fn get_vote_record(vote_id: u64) -> Option<VoteRecord<T::AccountId>> {
+		return <VoteRecords<T>>::get(vote_id);
 	}
 }
 
