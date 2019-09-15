@@ -248,7 +248,7 @@ pub fn get_genesis_mainnet_validators() -> Vec<(AccountId, AccountId, AuraId, Ba
 		// 5GRXt7pHygChp4rWpm2cbXWvpjYswQdpfrDf92eUHBB6HmWr
 		hex!["c0d38228d2a149ea1e4e75912578a68f400c6ac8c55970fe7e058aca61cf1747"].unchecked_into(),
 		// Initial bonded stake
-		(15621875000000000000000000 - CONTROLLER_ENDOWMENT),
+		(31243750000000000000000000 - CONTROLLER_ENDOWMENT),
 		// 5G7niGTdvB6DNznmnWrDEmqyKkJcpuUYnEGzkMQqGZpoehrJ
 		hex!["b34b038fafa91da6332063bc453a21ca14bd054e12a7ed2bd2b819e7a7ac2208"].unchecked_into(),
 		// 5CMZdw5MG68Harf6TGvsMaPcLtfXQHYQp1HtWSVoUsDA4KBr
