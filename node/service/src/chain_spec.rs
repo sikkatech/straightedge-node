@@ -166,7 +166,7 @@ pub fn straightedge_mainnet_config() -> Result<ChainSpec, String> {
 	let boot_nodes = vec![
 		"/ip4/159.65.223.215/tcp/30333/p2p/QmTVhTDnxBBjAGmgGXmha4zJ1E8CUPoeC4Rmi3LWyoLVVB".to_string(), // Sunny
 		"/ip4/134.209.244.243/tcp/30333/p2p/QmbkJhL1Drr67BzGv8HxTnXeJfU9jKvj7LH6pp5A4Atoq6".to_string(), // Chris
-		"/ip4/35.157.118.166/tcp/30333/p2p/QmXXYYz3j6J4QtZTyXqSxqvp4uHfMrkxZfnEVDSRvsQzQF".to_string(), // Julien
+		"/ip4/35.157.118.166/tcp/30333/p2p/QmdfPKgYx61H2X6xGiwfdMCswekxxoYB4E9askgfLegVK5".to_string(), // Julien
 		"/ip4/165.227.18.43/tcp/30333/p2p/QmVs8tjmd6ShJjcgQ2QoMfCMJc8mKqr5oe2rLWPnNqSxtF".to_string(), // maskofice
 		"/ip4/178.128.231.97/tcp/30333/p2p/Qmf6WAJRB4Bhr7WMRcmZaDJtgScAKMoyAjmTg6LWT4A78Q".to_string(), // maskofice
 	];
