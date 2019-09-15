@@ -35,7 +35,7 @@ use sr_primitives::{
 use core::convert::TryInto;
 
 const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
-const DEFAULT_PROTOCOL_ID: &str = "str";
+const DEFAULT_PROTOCOL_ID: &str = "str8";
 
 /// Specialised `ChainSpec`.
 pub type ChainSpec = substrate_service::ChainSpec<GenesisConfig>;
@@ -60,6 +60,14 @@ pub fn straightedge_mainnet_config_genesis() -> GenesisConfig {
 		GrandpaId,
 		ImOnlineId
 	)> = get_genesis_mainnet_validators();
+	let initial_lockdrop_authorities: Vec<(
+		AccountId,
+		AccountId,
+		AuraId,
+		Balance,
+		GrandpaId,
+		ImOnlineId
+	)> = get_lockdrop_mainnet_validators();
 	// lockdrop spec
 	let spec = get_spec_allocation().unwrap();
 	let lockdrop_balances = spec.0;
@@ -72,6 +80,7 @@ pub fn straightedge_mainnet_config_genesis() -> GenesisConfig {
 	let election_members = get_mainnet_election_members();
 	// session keys contain genesis authorities
 	let session_keys = genesis_authorities.iter().map(|x| (x.0.clone(), session_keys(x.2.clone(), x.4.clone(), x.5.clone())))
+		.chain(initial_lockdrop_authorities.iter().map(|x| (x.0.clone(), session_keys(x.2.clone(), x.4.clone(), x.5.clone()))))
 		.collect::<Vec<_>>();
 
 	GenesisConfig {
@@ -87,6 +96,7 @@ pub fn straightedge_mainnet_config_genesis() -> GenesisConfig {
 				.collect(),
 			vesting: genesis_authorities.iter().map(|x| (x.0.clone(), 1314000, 1, x.3.clone()))
 				.chain(genesis_allocation.iter().map(|x| (x.0.clone(), 1314000, 1, x.1.clone())))
+				.chain(lockdrop_balances.iter().map(|x| (x.0.clone(), 438000, 1, CONTROLLER_ENDOWMENT)))
 				.collect(),
 		}),
 		indices: Some(IndicesConfig {
@@ -109,7 +119,12 @@ pub fn straightedge_mainnet_config_genesis() -> GenesisConfig {
 				// Ensure stakers have some non-bonded balance
 				x.3.clone() - CONTROLLER_ENDOWMENT,
 				StakerStatus::Validator
-			)).collect(),
+			)).chain(initial_lockdrop_authorities.iter().map(|x| (
+				x.0.clone(),
+				x.1.clone(),
+				x.3.clone(),
+				StakerStatus::Validator
+			))).collect(),
 			invulnerables: vec![],
 			slash_reward_fraction: Perbill::from_percent(0),
 			.. Default::default()
@@ -168,7 +183,8 @@ pub fn straightedge_mainnet_config() -> Result<ChainSpec, String> {
 		"/ip4/134.209.244.243/tcp/30333/p2p/QmbkJhL1Drr67BzGv8HxTnXeJfU9jKvj7LH6pp5A4Atoq6".to_string(), // Chris
 		"/ip4/35.157.118.166/tcp/30333/p2p/QmdfPKgYx61H2X6xGiwfdMCswekxxoYB4E9askgfLegVK5".to_string(), // Julien
 		"/ip4/165.227.18.43/tcp/30333/p2p/QmVs8tjmd6ShJjcgQ2QoMfCMJc8mKqr5oe2rLWPnNqSxtF".to_string(), // maskofice
-		"/ip4/178.128.231.97/tcp/30333/p2p/Qmf6WAJRB4Bhr7WMRcmZaDJtgScAKMoyAjmTg6LWT4A78Q".to_string(), // maskofice
+		"/ip4/178.128.231.97/tcp/30333/p2p/Qmf6WAJRB4Bhr7WMRcmZaDJtgScAKMoyAjmTg6LWT4A78Q".to_string(), // briancohen
+		"/ip4/3.15.223.164/tcp/30333/p2p/QmY4ZGbFCwXP29u1k1gsf9prCThvMaHiYXovCrBvpDq6A6".to_string(), // florian
 	];
 
 	let data = r#"
@@ -180,7 +196,7 @@ pub fn straightedge_mainnet_config() -> Result<ChainSpec, String> {
 
 	Ok(ChainSpec::from_genesis(
 		"Straightedge",
-		"straightedge",
+		"straightedgeXX",
 		straightedge_mainnet_config_genesis,
 		boot_nodes,
 		Some(TelemetryEndpoints::new(vec![(STAGING_TELEMETRY_URL.to_string(), 0)])),

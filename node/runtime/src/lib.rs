@@ -154,7 +154,7 @@ impl indices::Trait for Runtime {
 parameter_types! {
 	pub const ExistentialDeposit: Balance = 10 * MILLICENTS;
 	// Mainnet genesis tx fee
-	pub const TransferFee: Balance = 9999999999 * DOLLARS;
+	pub const TransferFee: Balance = 1 * DOLLARS;
 	pub const CreationFee: Balance = 1 * CENTS;
 	pub const TransactionBaseFee: Balance = 1 * CENTS;
 	pub const TransactionByteFee: Balance = 10 * MILLICENTS;

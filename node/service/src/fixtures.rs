@@ -145,14 +145,6 @@ pub fn get_genesis_allocation() -> Vec<(AccountId, Balance)> {
 		31243750000000000000000000,
 	),
 
-	// julien key
-	(
-		hex!["07f745e7e0b3c3017be0fc1dddbce8d39f0dd794a1c50b44eb62466aff153e94"].unchecked_into(),
-		31243750000000000000000000,
-	),
-	
-
-
 	// edgeware genesis validators unstaked
 	(
 		hex!["e049bb3d3369ddf42e07a51e8eeadb660a618fc3cea63dc728a2b79683873855"].unchecked_into(),
@@ -248,6 +240,31 @@ pub fn get_genesis_mainnet_validators() -> Vec<(AccountId, AccountId, AuraId, Ba
 		hex!["2f7bd9c375d4e13216980da3e932e8317205d92dc6a52b4b70572f0dea77df92"].unchecked_into(),
 		// 5F6gK4diV35AWJ86GCLboteSGfjKFsgE2spc2gckUu51vsd9
 		hex!["8635fd91de3e210baddfa9c8f4fad050dc68852c4fa5a8fa7aea739fadb2f32b"].unchecked_into(),
+	), ( // julien
+		// 5DcfNHUdoBJmDj6XUDJtqS2A7L9EntKKRANU4yvkPyBryzqw
+		hex!["449bb4d6d41bad287732655b3cb9700cece0776cc3c71372c833e6777054a270"].unchecked_into(),
+		// 5EjWd1S5PZjdVrqaGJG8D2dkZax8CrGzBnT2Py8M18XxgG2h
+		hex!["7611372cafdd5beb97b3816d643f7ff40f8c117166a58c00ade0d0b42b817f25"].unchecked_into(),
+		// 5GRXt7pHygChp4rWpm2cbXWvpjYswQdpfrDf92eUHBB6HmWr
+		hex!["c0d38228d2a149ea1e4e75912578a68f400c6ac8c55970fe7e058aca61cf1747"].unchecked_into(),
+		// Initial bonded stake
+		(15621875000000000000000000 - CONTROLLER_ENDOWMENT),
+		// 5G7niGTdvB6DNznmnWrDEmqyKkJcpuUYnEGzkMQqGZpoehrJ
+		hex!["b34b038fafa91da6332063bc453a21ca14bd054e12a7ed2bd2b819e7a7ac2208"].unchecked_into(),
+		// 5CMZdw5MG68Harf6TGvsMaPcLtfXQHYQp1HtWSVoUsDA4KBr
+		hex!["0cdb8096f2310217e14d377e87b142d9ca6d5061108e01becea52817d3142a05"].unchecked_into(),
+	)];
+}
+
+
+pub fn get_lockdrop_mainnet_validators() -> Vec<(AccountId, AccountId, AuraId, Balance, GrandpaId, ImOnlineId)> {
+	return vec![(
+		hex!["aeb995615b36c72bd22637ea15d926386b4f51bf74fb79eae26fd24fda410806"].unchecked_into(),
+		hex!["947a28f326b8501d02d9af7371ec209f940b9a0225f4eb7eb56a1db6820ba53a"].unchecked_into(),
+		hex!["4b9fca841bb618be3680684657cea5a6d833e5509b6d7788154ce20bac9e3d36"].unchecked_into(),
+		150000000000000000000000,
+		hex!["ae6a216639c5564b83a2aaa409f3cddf2d8e81dc28bcabfb4545718a523be9e9"].unchecked_into(),
+		hex!["92ab61796c8751b46d542539066f9b5eb9723e7f99ea016a382259327fe629a1"].unchecked_into(),
 	)];
 }
 
