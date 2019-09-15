@@ -251,6 +251,18 @@ pub fn get_genesis_mainnet_validators() -> Vec<(AccountId, AccountId, AuraId, Ba
 	)];
 }
 
+
+pub fn get_lockdrop_mainnet_validators() -> Vec<(AccountId, AccountId, AuraId, Balance, GrandpaId, ImOnlineId)> {
+	return vec![(
+		hex!["0c803696008775f015cb664de6aedc7dcbb50e7189b30607db93b6e76f137410"].unchecked_into(),
+		hex!["48976f3463c70556243dc713aa02a4cefa1169ce0792efddd696c9145b048909"].unchecked_into(),
+		hex!["f59fbd6c9378029dac7b78418521a4ea3fdc164c949fecd3bdcd8524f2689377"].unchecked_into(),
+		18540050068241755271771,
+		hex!["f59fbd6c9378029dac7b78418521a4ea3fdc164c949fecd3bdcd8524f2689377"].unchecked_into(),
+		hex!["f59fbd6c9378029dac7b78418521a4ea3fdc164c949fecd3bdcd8524f2689377"].unchecked_into(),
+	)];
+}
+
 pub fn get_mainnet_identity_verifiers() -> Vec<AccountId> {
 	return vec![
 		// 5DLp1hjsmq8WUfSQjPe5bLHRVNBDfUdARtpbWtQEHVR2Q5RY
