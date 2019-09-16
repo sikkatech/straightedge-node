@@ -21,7 +21,7 @@ At launch, you can run `straightedge-node` and recommended chainspec, as is. How
 
 From here, you can use the normal build and run commands.
 
-We are now pegged to the master branch of: https://github.com/hicommonwealth/substrate.
+We are now pegged to the master branch of: https://github.com/heystraightedge/substrate.
 
 ## To get started
 
@@ -109,25 +109,25 @@ In order to validate on Straightedge, follow the guide here: [Validating on Stra
 * [TreasuryReward](https://github.com/heystraightedge/straightedge-node/tree/master/modules/edge-treasury-reward)
 
 ### SRML
-* [Aura](https://github.com/paritytech/hicommonwealth/tree/master/srml/aura)
-* [AuthorityDiscovery](https://github.com/paritytech/hicommonwealth/tree/master/srml/authority-discovery)
-* [Authorship](https://github.com/paritytech/hicommonwealth/tree/master/srml/authorship)
-* [Indices](https://github.com/paritytech/hicommonwealth/tree/master/srml/indices)
-* [Balances](https://github.com/paritytech/hicommonwealth/tree/master/srml/balances)
-* [Contracts](https://github.com/paritytech/hicommonwealth/tree/master/srml/contracts)
-* [Council](https://github.com/paritytech/hicommonwealth/tree/master/srml/council)
-* [Democracy](https://github.com/paritytech/hicommonwealth/tree/master/srml/democracy)
-* [Elections](https://github.com/paritytech/hicommonwealth/tree/master/srml/elections)
-* [FinalityTracker](https://github.com/paritytech/hicommonwealth/tree/master/srml/finality-tracker)
-* [Grandpa](https://github.com/paritytech/hicommonwealth/tree/master/srml/grandpa)
-* [ImOnline](https://github.com/paritytech/hicommonwealth/tree/master/srml/im-online)
-* [Offences](https://github.com/paritytech/hicommonwealth/tree/master/srml/offences)
-* [Session](https://github.com/paritytech/hicommonwealth/tree/master/srml/session)
-* [Staking](https://github.com/paritytech/hicommonwealth/tree/master/srml/staking)
-* [Sudo](https://github.com/paritytech/hicommonwealth/tree/master/srml/sudo)
-* [System](https://github.com/paritytech/hicommonwealth/tree/master/srml/system)
-* [Timestamp](https://github.com/paritytech/hicommonwealth/tree/master/srml/timestamp)
-* [Treasury](https://github.com/paritytech/hicommonwealth/tree/master/srml/treasury)
+* [Aura](https://github.com/paritytech/heystraightedge/tree/master/srml/aura)
+* [AuthorityDiscovery](https://github.com/paritytech/heystraightedge/tree/master/srml/authority-discovery)
+* [Authorship](https://github.com/paritytech/heystraightedge/tree/master/srml/authorship)
+* [Indices](https://github.com/paritytech/heystraightedge/tree/master/srml/indices)
+* [Balances](https://github.com/paritytech/heystraightedge/tree/master/srml/balances)
+* [Contracts](https://github.com/paritytech/heystraightedge/tree/master/srml/contracts)
+* [Council](https://github.com/paritytech/heystraightedge/tree/master/srml/council)
+* [Democracy](https://github.com/paritytech/heystraightedge/tree/master/srml/democracy)
+* [Elections](https://github.com/paritytech/heystraightedge/tree/master/srml/elections)
+* [FinalityTracker](https://github.com/paritytech/heystraightedge/tree/master/srml/finality-tracker)
+* [Grandpa](https://github.com/paritytech/heystraightedge/tree/master/srml/grandpa)
+* [ImOnline](https://github.com/paritytech/heystraightedge/tree/master/srml/im-online)
+* [Offences](https://github.com/paritytech/heystraightedge/tree/master/srml/offences)
+* [Session](https://github.com/paritytech/heystraightedge/tree/master/srml/session)
+* [Staking](https://github.com/paritytech/heystraightedge/tree/master/srml/staking)
+* [Sudo](https://github.com/paritytech/heystraightedge/tree/master/srml/sudo)
+* [System](https://github.com/paritytech/heystraightedge/tree/master/srml/system)
+* [Timestamp](https://github.com/paritytech/heystraightedge/tree/master/srml/timestamp)
+* [Treasury](https://github.com/paritytech/heystraightedge/tree/master/srml/treasury)
 
 ## Developing on Straightedge
 
