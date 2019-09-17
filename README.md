@@ -26,7 +26,7 @@ We are now pegged to the master branch of: https://github.com/hicommonwealth/sub
 ## To get started
 
 - Download this entire repository to the file system that you are using to run the validator node.
-  - You can do this by going to [this page](https://github.com/heystraightedger/straightedge-node) and selecting "Clone or download" followed by "Download ZIP".
+  - You can do this by going to [this page](https://github.com/heystraightedge/straightedge-node) and selecting "Clone or download" followed by "Download ZIP".
   - If you are installing via a command line interface (e.g. SSH into a remote server), you can download by running `wget https://github.com/heystraightedge/straightedge-node/archive/master.zip` or `git clone github.com/heystraightedge/straightedge-node`
   - Once you have downloaded the zip file, unzip the `straightedge-node-master` folder onto the file system. If you are using a command line interface, you can unzip by running `unzip master.zip`.  If you `git clone`d the repository, you can just cd into there.
   - **_All commands referenced in this document need to be run from within the `edgeware-node-master` folder._**
