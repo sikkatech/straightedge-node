@@ -10,3 +10,6 @@
 # Node script
 run_node.sh
 testnets/testing*.json
+
+# Cargo.lock
+Cargo.lock
